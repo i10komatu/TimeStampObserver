@@ -124,18 +124,13 @@ namespace TimeStampObserver
 
         private void button5_Click(object sender, EventArgs e)
         {
-            string[] s = parse(textBox3.Text);
-            for (int i = 0; i < s.Length; i++)
-            {
-                MessageBox.Show(s[i]);
-            }
-            return;
             if (working)
             {
                 this.button5.Text = "実行(&R)";
                 this.button1.Enabled = true;
                 this.button2.Enabled = true;
                 this.button3.Enabled = true;
+                this.button4.Enabled = true;
                 this.textBox1.Enabled = true;
                 this.textBox2.Enabled = true;
                 this.textBox3.Enabled = true;
@@ -143,11 +138,12 @@ namespace TimeStampObserver
             }
             else
             {
-                string file = textBox1.Text;
-                string cmdln = textBox2.Text;
+                string wd = textBox1.Text;
+                string file = textBox2.Text;
+                string cmdln = textBox3.Text;
                 cmdln = cmdln.Replace("$F", file);
                 cmdln = cmdln.Replace("$$", "$");
-                string[] commands = new List<string>(cmdln.Split(' ')).ToArray();
+                string[] commands = parse(cmdln);
 
                 MessageBox.Show(file);
                 foreach (string c in commands)
@@ -159,6 +155,7 @@ namespace TimeStampObserver
                 this.button1.Enabled = false;
                 this.button2.Enabled = false;
                 this.button3.Enabled = false;
+                this.button4.Enabled = false;
                 this.textBox1.Enabled = false;
                 this.textBox2.Enabled = false;
                 this.textBox3.Enabled = false;
