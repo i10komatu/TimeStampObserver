@@ -8,11 +8,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using System.IO;
+
 namespace TimeStampObserver
 {
     public partial class Form1 : Form
     {
-        OpenFileDialog ofd1, ofd2;
+        OpenFileDialog ofd1, ofd2, ofd3;
         FolderBrowserDialog fbd;
         bool working;
 
@@ -29,7 +31,13 @@ namespace TimeStampObserver
             ofd2.InitialDirectory = @"C:\";
             ofd2.Title = "実行するプログラムを選択してください";
             ofd2.RestoreDirectory = true;
+            ofd2.Filter = "exe|*.exe";
 
+            ofd3 = new OpenFileDialog();
+            ofd3.InitialDirectory = @"C:\";
+            ofd3.Title = "追加するファイルを選択してください";
+            ofd3.RestoreDirectory = true;
+            
             fbd = new FolderBrowserDialog();
             fbd.SelectedPath = @"C:\";
             fbd.Description = "ワーキングディレクトリを設定してください";
@@ -47,6 +55,9 @@ namespace TimeStampObserver
 
         private void button1_Click(object sender, EventArgs e)
         {
+            if (Directory.Exists(textBox1.Text)) {
+                fbd.SelectedPath = textBox1.Text;
+            }
             if (fbd.ShowDialog() == DialogResult.OK)
             {
                 this.textBox1.Text = fbd.SelectedPath;
@@ -59,14 +70,7 @@ namespace TimeStampObserver
         {
             if (ofd1.ShowDialog() == DialogResult.OK)
             {
-                if (ofd1.FileName.IndexOf(' ') == -1)
-                {
-                    this.textBox2.Text = ofd1.FileName;
-                }
-                else
-                {
-                    this.textBox2.Text = "\"" + ofd1.FileName + "\"";
-                }
+                this.textBox2.Text = ofd1.FileName;
             }
         }
 
@@ -74,22 +78,61 @@ namespace TimeStampObserver
         {
             if (ofd2.ShowDialog() == DialogResult.OK)
             {
-                if (ofd2.FileName.IndexOf(' ') == -1)
+                string str;
+                string[] args = parse(textBox3.Text);
+                if (args.Length != 0)
                 {
-                    this.textBox3.Text = ofd2.FileName;
+                    if (ofd2.FileName.IndexOf(' ') == -1)
+                    {
+                        args[0] = ofd2.FileName.Replace("$", "$$");
+                    }
+                    else
+                    {
+                        args[0] = "\"" + ofd2.FileName.Replace("$", "$$") + "\"";
+                    }
+                    str = args[0] + " " + args[1];
                 }
                 else
                 {
-                    this.textBox3.Text = "\"" + ofd2.FileName + "\"";
+                    if (ofd2.FileName.IndexOf(' ') == -1)
+                    {
+                        str = ofd2.FileName.Replace("$", "$$");
+                    }
+                    else
+                    {
+                        str = "\"" + ofd2.FileName.Replace("$", "$$") + "\"";
+                    }
                 }
+                textBox3.Text = str;
             }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
+            if (ofd3.ShowDialog() == DialogResult.OK)
+            {
+                if (ofd3.FileName.IndexOf(' ') == -1)
+                {
+                    textBox3.Text = textBox3.Text.Trim() + " " + ofd3.FileName.Replace("$", "$$");
+                }
+                else
+                {
+                    textBox3.Text = textBox3.Text.Trim() + " \"" + ofd3.FileName.Replace("$", "$$") + "\"";
+                }
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            string[] s = parse(textBox3.Text);
+            for (int i = 0; i < s.Length; i++)
+            {
+                MessageBox.Show(s[i]);
+            }
+            return;
             if (working)
             {
-                this.button4.Text = "実行(&R)";
+                this.button5.Text = "実行(&R)";
                 this.button1.Enabled = true;
                 this.button2.Enabled = true;
                 this.button3.Enabled = true;
@@ -112,7 +155,7 @@ namespace TimeStampObserver
                     MessageBox.Show(c);
                 }
 
-                this.button4.Text = "停止(&S)";
+                this.button5.Text = "停止(&S)";
                 this.button1.Enabled = false;
                 this.button2.Enabled = false;
                 this.button3.Enabled = false;
@@ -121,6 +164,48 @@ namespace TimeStampObserver
                 this.textBox3.Enabled = false;
                 working = true;
             }
+        }
+
+        /// <summary>
+        /// 引数をコマンドラインとして構文解析し、プログラム名とコマンドライン引数を区切ります
+        /// </summary>
+        /// <param name="s">解析する文章</param>
+        /// <returns>区切った引数の配列</returns>
+        private string[] parse(string s)
+        {
+            List<string> args = new List<string>();
+            
+            if (!string.IsNullOrWhiteSpace(s))
+            {
+                if (s[0] == '"')
+                {
+                    int t = s.IndexOf('"', 1);
+                    if (t == -1)
+                    {
+                        args.Add(s);
+                    }
+                    else
+                    {
+                        args.Add(s.Substring(0, t + 1));
+                        args.Add(s.Substring(t + 2));
+                    }
+                }
+                else
+                {
+                    int t = s.IndexOf(' ');
+                    if (t == -1)
+                    {
+                        args.Add(s);
+                    }
+                    else
+                    {
+                        args.Add(s.Substring(0, t));
+                        args.Add(s.Substring(t + 1));
+                    }
+                }
+            }
+
+            return args.ToArray();
         }
     }
 }
