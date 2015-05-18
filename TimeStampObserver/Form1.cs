@@ -70,7 +70,7 @@ namespace TimeStampObserver
         {
             if (ofd1.ShowDialog() == DialogResult.OK)
             {
-                this.textBox2.Text = ofd1.FileName;
+                this.textBox2.Text = ofd1.FileName.Replace(textBox1.Text, "").Trim('\\');
             }
         }
 
@@ -139,17 +139,42 @@ namespace TimeStampObserver
             else
             {
                 string wd = textBox1.Text;
-                string file = textBox2.Text;
+                string filePath;
+                string file;
                 string cmdln = textBox3.Text;
-                cmdln = cmdln.Replace("$F", file);
+                cmdln = cmdln.Replace("$F", textBox2.Text);
                 cmdln = cmdln.Replace("$$", "$");
                 string[] commands = parse(cmdln);
 
+                int tmp = textBox2.Text.LastIndexOf('\\', textBox2.Text.Length - 1);
+                file = textBox2.Text.Substring(tmp + 1);
+                if (Path.IsPathRooted(textBox2.Text))
+                {
+                    filePath = textBox2.Text.Substring(0,tmp);
+                }
+                else
+                {
+                    if (tmp != -1)
+                    {
+                        filePath = wd.TrimEnd('\\') + "\\" + textBox2.Text.Substring(0, tmp);
+                    }
+                    else
+                    {
+                        filePath = wd;
+                    }
+                }
+
                 MessageBox.Show(file);
+                MessageBox.Show(filePath);
+
                 foreach (string c in commands)
                 {
                     MessageBox.Show(c);
                 }
+
+                FileSystemWatcher watcher = new FileSystemWatcher();
+                watcher.Path = filePath;
+                watcher.Filter = file;
 
                 this.button5.Text = "停止(&S)";
                 this.button1.Enabled = false;
