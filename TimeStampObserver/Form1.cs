@@ -85,6 +85,8 @@ namespace TimeStampObserver
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.Visible = false;
+                this.ShowInTaskbar = false;
+                this.notifyIcon1.Visible = true;
             }
         }
 
@@ -352,6 +354,63 @@ namespace TimeStampObserver
             return args.ToArray();
         }
 
+        /// <summary>
+        /// 引数をコマンドラインとして構文解析し、プログラム名とコマンドライン引数を区切ります。
+        /// コマンドライン引数も一つ一つ別要素に区切ります。
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        private string[] parseAll(string s)
+        {
+            // 引数リスト
+            List<string> args = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(s))
+            {
+                while (s.Length > 0)
+                {
+                    // 先頭が"ならば、次の引数は"で囲まれたものと判断する
+                    if (s[0] == '"')
+                    {
+                        // 次の"の位置を探す
+                        int t = s.IndexOf('"', 1);
+                        // なければ残りを1つの引数とみなす
+                        if (t == -1)
+                        {
+                            args.Add(s);
+                            s = "";
+                        }
+                        // あればそこまでを1引数とし、切り取る
+                        else
+                        {
+                            args.Add(s.Substring(0, t + 1));
+                            s = s.Substring(t + 2).Trim();
+                        }
+                    }
+                    else
+                    {
+                        // 次の引数の分割位置を探す
+                        int t = s.IndexOf(' ');
+
+                        // なければ残りを1つの引数とみなす
+                        if (t == -1)
+                        {
+                            args.Add(s);
+                            s = "";
+                        }
+                        // あればそこまでを1引数とし、切り取る
+                        else
+                        {
+                            args.Add(s.Substring(0, t));
+                            s = s.Substring(t + 1);
+                        }
+                    }
+                }
+            }
+
+            return args.ToArray();
+        }
+
         private void watcherChanged(object source, FileSystemEventArgs e)
         {
             // 同時起動を防ぐ目的
@@ -362,30 +421,77 @@ namespace TimeStampObserver
             {
                 // 変更に関してのみ行う
                 case WatcherChangeTypes.Changed:
-                    // 外部プログラムを実行する
-                    Process p = new Process();
-                    p.StartInfo.FileName = commands[0];
-                    if (commands.Length == 2)
+                    switch (commands[0])
                     {
-                        p.StartInfo.Arguments = commands[1];
-                    }
-                    try
-                    {
-                        if (!p.Start())
-                        {
-                            MessageBox.Show("Failed!!");
-                        }
-                    }
-                    catch
-                    {
-                        this.Visible = true;
-                        this.WindowState = FormWindowState.Normal;
-                        this.button5.PerformClick();
-                        MessageBox.Show("Command Failed!! Observation Aborted.", "Time Stamp Observer");
+                        case "copy":
+                        case "cp":
+                            // コマンドライン引数を二つに分割
+                            string[] args = parseAll(commands[1]);
+                            if (args.Length != 2)
+                            {
+                                this.Visible = true;
+                                this.ShowInTaskbar = true;
+                                this.notifyIcon1.Visible = false;
+                                this.WindowState = FormWindowState.Normal;
+                                this.button5.PerformClick();
+                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            // コピー元のファイルがなければエラー
+                            if(File.Exists(args[0])){
+                                File.Copy(args[0], args[1], true);
+                            }
+                            else
+                            {
+                                this.Visible = true;
+                                this.ShowInTaskbar = true;
+                                this.notifyIcon1.Visible = false;
+                                this.WindowState = FormWindowState.Normal;
+                                this.button5.PerformClick();
+                                MessageBox.Show("Command Failed!!\n" + args[0] + " is not found. Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            break;
+                        default:
+                            // 外部プログラムを実行する
+                            Process p = new Process();
+                            p.StartInfo.FileName = commands[0];
+                            if (commands.Length == 2)
+                            {
+                                p.StartInfo.Arguments = commands[1];
+                            }
+                            try
+                            {
+                                if (!p.Start())
+                                {
+                                    MessageBox.Show("Failed!!");
+                                }
+                            }
+                            catch
+                            {
+                                this.Visible = true;
+                                this.ShowInTaskbar = true;
+                                this.notifyIcon1.Visible = false;
+                                this.WindowState = FormWindowState.Normal;
+                                this.button5.PerformClick();
+                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            break;
                     }
                     break;
             }
             processing = false;
+        }
+
+        private void notifyIcon1_MouseClick(object sender, MouseEventArgs e)
+        {
+
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.Visible = true;
+            this.ShowInTaskbar = true;
+            this.notifyIcon1.Visible = false;
+            this.WindowState = FormWindowState.Normal;
         }
     }
 }
