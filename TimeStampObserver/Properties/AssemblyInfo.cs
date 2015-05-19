@@ -6,11 +6,11 @@ using System.Resources;
 // アセンブリに関する一般情報は以下の属性セットをとおして制御されます。
 // アセンブリに関連付けられている情報を変更するには、
 // これらの属性値を変更してください。
-[assembly: AssemblyTitle("Time Stamp Observer")]
+[assembly: AssemblyTitle("Timestamp Observer")]
 [assembly: AssemblyDescription("ファイルのタイムスタンプを監視し、ファイルが変更されたときに任意のプロセスを起動します。")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Komatsu Hiroto")]
-[assembly: AssemblyProduct("Time Stamp Observer")]
+[assembly: AssemblyProduct("Timestamp Observer")]
 [assembly: AssemblyCopyright("Copyright © 2015 Komatsu Hiroto")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
