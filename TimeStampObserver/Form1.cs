@@ -109,7 +109,7 @@ namespace TimeStampObserver
             if (args.ContainsKey("file"))
             {
                 // 絶対パス指定じゃなかった場合は、カレントディレクトリを設定
-                if (Path.IsPathRooted(args["file"]))
+                if (!Path.IsPathRooted(args["file"]))
                 {
                     textBox1.Text = Environment.CurrentDirectory;
                 }
@@ -324,9 +324,20 @@ namespace TimeStampObserver
                 return;
             }
 
-            if (File.Exists(files[0]))
+
+            string file;
+            if (string.IsNullOrWhiteSpace(textBox1.Text))
             {
-                target.Text = files[0].Replace(textBox1.Text, "").Trim('\\');
+                file = files[0].Trim('\\');
+            }
+            else
+            {
+                file = files[0].Replace(textBox1.Text, "").Trim('\\');
+            }
+
+            if (File.Exists(file))
+            {
+                target.Text = file;
             }
         }
 
@@ -347,7 +358,16 @@ namespace TimeStampObserver
             }
 
             // ファイル名に空白が含まれていた場合は"で囲む
-            string file = files[0].Replace(textBox1.Text, "").Trim('\\');
+            string file;
+            if (string.IsNullOrWhiteSpace(textBox1.Text))
+            {
+                file = files[0].Trim('\\');
+            }
+            else
+            {
+                file = files[0].Replace(textBox1.Text, "").Trim('\\');
+            }
+
             if (file.IndexOf(' ') == -1)
             {
                 target.Text = target.Text.Trim() + " " + file;
@@ -449,6 +469,7 @@ namespace TimeStampObserver
                             }
                             break;
                     }
+                    showBalloonTip("指定されたコマンドを実行しました", ToolTipIcon.Info);
                     break;
             }
             processing = false;
@@ -700,7 +721,7 @@ namespace TimeStampObserver
                 }
                 if (string.IsNullOrWhiteSpace(textBox2.Text) || !File.Exists(textBox2.Text))
                 {
-                    MessageBox.Show((string.IsNullOrWhiteSpace(textBox2.Text) ? "" : "ファイル名: " + (Path.IsPathRooted(textBox2.Text) ? "" : filePath.TrimEnd('\\') + "\\" + textBox2.Text+ "\n")) +"ファイルが見つかりません", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show((string.IsNullOrWhiteSpace(textBox2.Text) ? "" : "ファイル名: " + ((Path.IsPathRooted(textBox2.Text) ? "" : filePath.TrimEnd('\\') + "\\" + textBox2.Text+ "\n"))) +"ファイルが見つかりません", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     this.textBox2.Focus();
                     return false;
                 }
@@ -745,7 +766,7 @@ namespace TimeStampObserver
 
         private void showBalloonTip(string text, ToolTipIcon icon)
         {
-            this.notifyIcon1.ShowBalloonTip(500, "Time Stamp Observer", text, icon);
+            this.notifyIcon1.ShowBalloonTip(0, "Time Stamp Observer", text, icon);
         }
         #endregion メソッド
     }
