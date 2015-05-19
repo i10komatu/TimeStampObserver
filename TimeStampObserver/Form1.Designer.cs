@@ -131,7 +131,7 @@
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(75, 23);
             this.button5.TabIndex = 8;
-            this.button5.Text = "実行(&R)";
+            this.button5.Text = "開始(&S)";
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
@@ -182,8 +182,8 @@
             // 
             this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "Time Stamp Observer";
-            this.notifyIcon1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseClick);
+            this.notifyIcon1.Text = "Time Stamp Observer\r\n待機中";
+            this.notifyIcon1.BalloonTipClicked += new System.EventHandler(this.notifyIcon1_BalloonTipClicked);
             this.notifyIcon1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseDoubleClick);
             // 
             // contextMenuStrip1
@@ -193,26 +193,26 @@
             this.開始ToolStripMenuItem,
             this.終了ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(173, 92);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(192, 70);
             this.contextMenuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.contextMenuStrip1_ItemClicked);
             // 
             // ウィンドウを表示ToolStripMenuItem
             // 
             this.ウィンドウを表示ToolStripMenuItem.Name = "ウィンドウを表示ToolStripMenuItem";
-            this.ウィンドウを表示ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.ウィンドウを表示ToolStripMenuItem.Text = "ウィンドウを表示";
+            this.ウィンドウを表示ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.ウィンドウを表示ToolStripMenuItem.Text = "ウィンドウを表示(&O)";
             // 
             // 開始ToolStripMenuItem
             // 
             this.開始ToolStripMenuItem.Name = "開始ToolStripMenuItem";
-            this.開始ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.開始ToolStripMenuItem.Text = "開始";
+            this.開始ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.開始ToolStripMenuItem.Text = "開始(&S)";
             // 
             // 終了ToolStripMenuItem
             // 
             this.終了ToolStripMenuItem.Name = "終了ToolStripMenuItem";
-            this.終了ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.終了ToolStripMenuItem.Text = "終了";
+            this.終了ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.終了ToolStripMenuItem.Text = "終了(&W)";
             // 
             // Form1
             // 

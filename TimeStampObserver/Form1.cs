@@ -30,7 +30,7 @@ namespace TimeStampObserver
         /// コマンドライン引数追加用ダイアログ
         /// </summary>
         private OpenFileDialog ofd3;
-        
+
         /// <summary>
         /// ディレクトリ選択ダイアログ
         /// </summary>
@@ -51,7 +51,7 @@ namespace TimeStampObserver
         /// 要素0には実行するプログラムを、要素1にはコマンドライン引数が入っている
         /// </summary>
         private string[] commands;
-        #endregion
+        #endregion フィールド
 
         public Form1()
         {
@@ -73,12 +73,13 @@ namespace TimeStampObserver
             ofd3.InitialDirectory = @"C:\";
             ofd3.Title = "追加するファイルを選択してください";
             ofd3.RestoreDirectory = true;
-            
+
             fbd = new FolderBrowserDialog();
             fbd.SelectedPath = @"C:\";
             fbd.Description = "ワーキングディレクトリを設定してください";
         }
 
+        #region イベントハンドラー
         private void Form1_Resize(object sender, EventArgs e)
         {
             // 最小化したときにタスクバーに非表示に設定
@@ -94,7 +95,8 @@ namespace TimeStampObserver
         {
             /* ワーキングディレクトリの設定を行う */
             // あらかじめディレクトリが入力されていた場合は初めから選択状態にしておく
-            if (Directory.Exists(textBox1.Text)) {
+            if (Directory.Exists(textBox1.Text))
+            {
                 fbd.SelectedPath = textBox1.Text;
             }
             // 選択されたフォルダを表示し、ほかのOpenFileDialogの初期位置に設定する
@@ -183,115 +185,11 @@ namespace TimeStampObserver
 
         private void button5_Click(object sender, EventArgs e)
         {
-            // 動作中
-            if (watcher != null)
+            // 開始判定
+            if (power() && watcher != null)
             {
-                // FileSystemWatcherを停止
-                watcher.EnableRaisingEvents = false;
-                watcher.Dispose();
-                watcher = null;
-
-                // GUIを元に戻す
-                this.button5.Text = "実行(&R)";
-                this.button1.Enabled = true;
-                this.button2.Enabled = true;
-                this.button3.Enabled = true;
-                this.button4.Enabled = true;
-                this.textBox1.Enabled = true;
-                this.textBox2.Enabled = true;
-                this.textBox3.Enabled = true;
-            }
-            // 停止中
-            else
-            {
-                // 引数用意
-                string wd = textBox1.Text;
-                string filePath;
-                string file;
-                string cmdln = textBox3.Text;
-                cmdln = cmdln.Replace("$F", textBox2.Text);
-                cmdln = cmdln.Replace("$$", "$");
-                commands = parse(cmdln);
-
-                // ファイル名とファイルパスを分離する
-                int tmp = textBox2.Text.LastIndexOf('\\', textBox2.Text.Length - 1);
-                file = textBox2.Text.Substring(tmp + 1);
-
-                // ファイルパスは絶対パスにする
-                if (Path.IsPathRooted(textBox2.Text))
-                {
-                    filePath = textBox2.Text.Substring(0,tmp);
-                }
-                else
-                {
-                    if (tmp != -1)
-                    {
-                        filePath = wd.TrimEnd('\\') + "\\" + textBox2.Text.Substring(0, tmp);
-                    }
-                    else
-                    {
-                        filePath = wd;
-                    }
-                }
-
-                /*
-                MessageBox.Show(file);
-                MessageBox.Show(filePath);
-
-                foreach (string c in commands)
-                {
-                    MessageBox.Show(c);
-                }
-                //*/
-
-                // 引数の確認
-                if (!string.IsNullOrWhiteSpace(wd))
-                {
-                    if (Directory.Exists(wd))
-                    {
-                        Directory.SetCurrentDirectory(wd);
-                    }
-                    else
-                    {
-                        MessageBox.Show("ワーキングディレクトリが正しくありません");
-                        return;
-                    }
-                }
-                if (string.IsNullOrWhiteSpace(textBox2.Text) || !File.Exists(textBox2.Text))
-                {
-                    MessageBox.Show("ファイル名が正しくありません");
-                    return;
-                }
-                if (string.IsNullOrWhiteSpace(filePath) || !Directory.Exists(filePath)) {
-                    MessageBox.Show("ファイルの場所を確認してください");
-                    return;
-                }
-                if(commands.Length == 0)
-                {
-                    MessageBox.Show("実行する処理を設定してください");
-                    return;
-                }
-
-                // FileSystemWatcherの設定
-                watcher = new FileSystemWatcher();
-                watcher.Path = filePath;
-                watcher.Filter = file;
-                watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
-                watcher.SynchronizingObject = this;
-
-                watcher.Changed += new FileSystemEventHandler(watcherChanged);
-
-                // FileSystemWatcherを有効に
-                watcher.EnableRaisingEvents = true;
-
-                this.button5.Text = "停止(&S)";
-                this.button1.Enabled = false;
-                this.button2.Enabled = false;
-                this.button3.Enabled = false;
-                this.button4.Enabled = false;
-                this.textBox1.Enabled = false;
-                this.textBox2.Enabled = false;
-                this.textBox3.Enabled = false;
+                this.WindowState = FormWindowState.Minimized;
+                showBalloonTip("監視を開始しました", ToolTipIcon.Info);
             }
         }
 
@@ -306,6 +204,123 @@ namespace TimeStampObserver
             }
         }
 
+        private void watcher_Changed(object source, FileSystemEventArgs e)
+        {
+            // 同時起動を防ぐ目的
+            if (processing) { return; }
+
+            processing = true;
+            switch (e.ChangeType)
+            {
+                // 変更に関してのみ行う
+                case WatcherChangeTypes.Changed:
+                    switch (commands[0])
+                    {
+                        case "copy":
+                        case "cp":
+                            // コマンドライン引数を二つに分割
+                            string[] args = parseAll(commands[1]);
+                            if (args.Length != 2)
+                            {
+                                ReturnFromTray();
+                                power();
+                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            // コピー元のファイルがなければエラー
+                            if (File.Exists(args[0]))
+                            {
+                                File.Copy(args[0], args[1], true);
+                            }
+                            else
+                            {
+                                ReturnFromTray();
+                                power();
+                                MessageBox.Show("Command Failed!!\n" + args[0] + " is not found. Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            break;
+                        default:
+                            // 外部プログラムを実行する
+                            Process p = new Process();
+                            p.StartInfo.FileName = commands[0];
+                            if (commands.Length == 2)
+                            {
+                                p.StartInfo.Arguments = commands[1];
+                            }
+                            try
+                            {
+                                if (!p.Start())
+                                {
+                                    MessageBox.Show("Failed!!");
+                                }
+                            }
+                            catch
+                            {
+                                ReturnFromTray();
+                                power();
+                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                            break;
+                    }
+                    break;
+            }
+            processing = false;
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.Visible = true;
+            this.ShowInTaskbar = true;
+            this.notifyIcon1.Visible = false;
+            this.WindowState = FormWindowState.Normal;
+        }
+
+        private void notifyIcon1_BalloonTipClicked(object sender, EventArgs e)
+        {
+            // 停止時のバルーンチップのみ
+            if (watcher == null)
+            {
+                ReturnFromTray();
+            }
+        }
+
+        private void contextMenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            int idx;
+
+            for (idx = 0; e.ClickedItem.Text != this.contextMenuStrip1.Items[idx].ToString(); idx++) ;
+
+            switch (idx)
+            {
+                // ウィンドウを表示
+                case 0:
+                    ReturnFromTray();
+                    break;
+                // 開始 | 停止
+                case 1:
+                    bool flag = power();
+                    if (watcher != null)
+                    {
+                        showBalloonTip("監視を開始しました", ToolTipIcon.Info);
+                    }
+                    else if (flag)
+                    {
+                        showBalloonTip("監視を停止しました。ウィンドウを表示する場合はクリックしてください。", ToolTipIcon.Info);
+                    }
+                    else
+                    {
+                        ReturnFromTray();
+                    }
+                    break;
+                // 終了
+                case 2:
+                    this.Close();
+                    break;
+            }
+        }
+
+        #endregion イベントハンドラー
+
+        #region メソッド
         /// <summary>
         /// 引数をコマンドラインとして構文解析し、プログラム名とコマンドライン引数を区切ります
         /// </summary>
@@ -315,7 +330,7 @@ namespace TimeStampObserver
         {
             // 引数リスト
             List<string> args = new List<string>();
-            
+
             if (!string.IsNullOrWhiteSpace(s))
             {
                 // 実行するファイルが""で囲まれているかどうかを判断
@@ -411,82 +426,10 @@ namespace TimeStampObserver
             return args.ToArray();
         }
 
-        private void watcherChanged(object source, FileSystemEventArgs e)
-        {
-            // 同時起動を防ぐ目的
-            if (processing) { return; }
-
-            processing = true;
-            switch (e.ChangeType)
-            {
-                // 変更に関してのみ行う
-                case WatcherChangeTypes.Changed:
-                    switch (commands[0])
-                    {
-                        case "copy":
-                        case "cp":
-                            // コマンドライン引数を二つに分割
-                            string[] args = parseAll(commands[1]);
-                            if (args.Length != 2)
-                            {
-                                this.Visible = true;
-                                this.ShowInTaskbar = true;
-                                this.notifyIcon1.Visible = false;
-                                this.WindowState = FormWindowState.Normal;
-                                this.button5.PerformClick();
-                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            // コピー元のファイルがなければエラー
-                            if(File.Exists(args[0])){
-                                File.Copy(args[0], args[1], true);
-                            }
-                            else
-                            {
-                                this.Visible = true;
-                                this.ShowInTaskbar = true;
-                                this.notifyIcon1.Visible = false;
-                                this.WindowState = FormWindowState.Normal;
-                                this.button5.PerformClick();
-                                MessageBox.Show("Command Failed!!\n" + args[0] + " is not found. Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            break;
-                        default:
-                            // 外部プログラムを実行する
-                            Process p = new Process();
-                            p.StartInfo.FileName = commands[0];
-                            if (commands.Length == 2)
-                            {
-                                p.StartInfo.Arguments = commands[1];
-                            }
-                            try
-                            {
-                                if (!p.Start())
-                                {
-                                    MessageBox.Show("Failed!!");
-                                }
-                            }
-                            catch
-                            {
-                                this.Visible = true;
-                                this.ShowInTaskbar = true;
-                                this.notifyIcon1.Visible = false;
-                                this.WindowState = FormWindowState.Normal;
-                                this.button5.PerformClick();
-                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                            break;
-                    }
-                    break;
-            }
-            processing = false;
-        }
-
-        private void notifyIcon1_MouseClick(object sender, MouseEventArgs e)
-        {
-
-        }
-
-        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        /// <summary>
+        /// トレイからフォームを取り出し表示する
+        /// </summary>
+        public void ReturnFromTray()
         {
             this.Visible = true;
             this.ShowInTaskbar = true;
@@ -494,9 +437,124 @@ namespace TimeStampObserver
             this.WindowState = FormWindowState.Normal;
         }
 
-        private void contextMenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        /// <summary>
+        /// 監視の状態を切り替える
+        /// </summary>
+        /// <returns>正常に切り替えられた場合はtrue、失敗した場合はfalse</returns>
+        private bool power()
         {
-            MessageBox.Show(e.ClickedItem.Text);
+            // 動作中
+            if (watcher != null)
+            {
+                // FileSystemWatcherを停止
+                watcher.EnableRaisingEvents = false;
+                watcher.Dispose();
+                watcher = null;
+
+                // GUIを元に戻す
+                this.button5.Text = "開始(&S)";
+                this.button1.Enabled = true;
+                this.button2.Enabled = true;
+                this.button3.Enabled = true;
+                this.button4.Enabled = true;
+                this.textBox1.Enabled = true;
+                this.textBox2.Enabled = true;
+                this.textBox3.Enabled = true;
+                this.notifyIcon1.Text = "Time Stamp Observer\n待機中";
+                this.contextMenuStrip1.Items[1].Text = "開始(&S)";
+            }
+            // 停止中
+            else
+            {
+                // 引数用意
+                string wd = textBox1.Text;
+                string filePath;
+                string file;
+                string cmdln = textBox3.Text;
+                cmdln = cmdln.Replace("$F", textBox2.Text);
+                cmdln = cmdln.Replace("$$", "$");
+                commands = parse(cmdln);
+
+                // ファイル名とファイルパスを分離する
+                int tmp = textBox2.Text.LastIndexOf('\\', textBox2.Text.Length - 1);
+                file = textBox2.Text.Substring(tmp + 1);
+
+                // ファイルパスは絶対パスにする
+                if (Path.IsPathRooted(textBox2.Text))
+                {
+                    filePath = textBox2.Text.Substring(0, tmp);
+                }
+                else
+                {
+                    if (tmp != -1)
+                    {
+                        filePath = wd.TrimEnd('\\') + "\\" + textBox2.Text.Substring(0, tmp);
+                    }
+                    else
+                    {
+                        filePath = wd;
+                    }
+                }
+
+                // 引数の確認
+                if (!string.IsNullOrWhiteSpace(wd))
+                {
+                    if (Directory.Exists(wd))
+                    {
+                        Directory.SetCurrentDirectory(wd);
+                    }
+                    else
+                    {
+                        MessageBox.Show("ワーキングディレクトリ(" + wd + ")が正しくありません");
+                        return false;
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(textBox2.Text) || !File.Exists(textBox2.Text))
+                {
+                    MessageBox.Show("ファイル名: " + (Path.IsPathRooted(textBox2.Text) || string.IsNullOrWhiteSpace(textBox2.Text) ? "" : filePath + "\\") + textBox2.Text + "\nファイルが見つかりません");
+                    return false;
+                }
+                if (string.IsNullOrWhiteSpace(filePath) || !Directory.Exists(filePath))
+                {
+                    MessageBox.Show("ファイルの場所: " + filePath + "\nファイルの場所を確認してください");
+                    return false;
+                }
+                if (commands.Length == 0)
+                {
+                    MessageBox.Show("設定中の処理: " + cmdln + "処理を確認してください\n");
+                    return false;
+                }
+
+                // FileSystemWatcherの設定
+                watcher = new FileSystemWatcher();
+                watcher.Path = filePath;
+                watcher.Filter = file;
+                watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
+                watcher.SynchronizingObject = this;
+
+                watcher.Changed += new FileSystemEventHandler(watcher_Changed);
+
+                // FileSystemWatcherを有効に
+                watcher.EnableRaisingEvents = true;
+
+                this.button5.Text = "停止(&S)";
+                this.button1.Enabled = false;
+                this.button2.Enabled = false;
+                this.button3.Enabled = false;
+                this.button4.Enabled = false;
+                this.textBox1.Enabled = false;
+                this.textBox2.Enabled = false;
+                this.textBox3.Enabled = false;
+                this.notifyIcon1.Text = "Time Stamp Observer\n監視中";
+                this.contextMenuStrip1.Items[1].Text = "停止(&S)";
+            }
+            return true;
         }
+
+        private void showBalloonTip(string text, ToolTipIcon icon)
+        {
+            this.notifyIcon1.ShowBalloonTip(500, "Time Stamp Observer", text, icon);
+        }
+        #endregion メソッド
     }
 }
