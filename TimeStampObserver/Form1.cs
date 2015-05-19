@@ -275,6 +275,98 @@ namespace TimeStampObserver
             }
         }
 
+        private void textBox1_DragDrop(object sender, DragEventArgs e)
+        {
+            // ドロップされたファイル一覧を取得
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+            if (files.Length <= 0)
+            {
+                return;
+            }
+
+            // ドロップ先がTextBoxであることを確認
+            TextBox target = sender as TextBox;
+            if (target == null)
+            {
+                return;
+            }
+
+            // 内容をフォルダ名に変更
+            if (Directory.Exists(files[0]))
+            {
+                target.Text = files[0];
+            }
+            // ファイルだった場合
+            else
+            {
+                int tmp = files[0].LastIndexOf('\\', files[0].Length - 1);
+                string file = files[0].Substring(tmp + 1);
+                string filePath = files[0].Substring(0, tmp);
+
+                textBox1.Text = filePath;
+                textBox2.Text = file;
+            }
+        }
+
+        private void textBox2_DragDrop(object sender, DragEventArgs e)
+        {
+            // ドロップされたファイル一覧を取得
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+            if (files.Length <= 0)
+            {
+                return;
+            }
+
+            // ドロップ先がTextBoxであることを確認
+            TextBox target = sender as TextBox;
+            if (target == null)
+            {
+                return;
+            }
+
+            if (File.Exists(files[0]))
+            {
+                target.Text = files[0].Replace(textBox1.Text, "").Trim('\\');
+            }
+        }
+
+        private void textBox3_DragDrop(object sender, DragEventArgs e)
+        {
+            // ドロップされたファイル一覧を取得
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+            if (files.Length <= 0)
+            {
+                return;
+            }
+
+            // ドロップ先がTextBoxであることを確認
+            TextBox target = sender as TextBox;
+            if (target == null)
+            {
+                return;
+            }
+
+            // ファイル名に空白が含まれていた場合は"で囲む
+            string file = files[0].Replace(textBox1.Text, "").Trim('\\');
+            if (file.IndexOf(' ') == -1)
+            {
+                target.Text = target.Text.Trim() + " " + file;
+            }
+            else
+            {
+                target.Text += target.Text.Trim() + " \"" + file + "\"";
+            }
+        }
+
+        private void textBox_DragEnter(object sender, DragEventArgs e)
+        {
+            // カーソルの下にドラッグ可能を示すエフェクトをつける
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+        }
+
         private void watcher_Changed(object source, FileSystemEventArgs e)
         {
             // 同時起動を防ぐ目的
@@ -301,7 +393,28 @@ namespace TimeStampObserver
                             // コピー元のファイルがなければエラー
                             if (File.Exists(args[0]))
                             {
-                                File.Copy(args[0], args[1], true);
+                                try
+                                {
+                                    File.Copy(args[0], args[1], true);
+                                }
+                                catch (DirectoryNotFoundException)
+                                {
+                                    ReturnFromTray();
+                                    power();
+                                    MessageBox.Show("ファイルコピーに失敗しました。フォルダが見つかりません。\n監視を中断します。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+                                catch (FileNotFoundException)
+                                {
+                                    ReturnFromTray();
+                                    power();
+                                    MessageBox.Show("ファイルコピーに失敗しました。ファイルが見つかりません。\n監視を中断します。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+                                catch
+                                {
+                                    ReturnFromTray();
+                                    power();
+                                    MessageBox.Show("ファイルコピーに失敗しました。\n監視を中断します。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
                             }
                             else
                             {
