@@ -43,6 +43,11 @@
             this.label4 = new System.Windows.Forms.Label();
             this.button4 = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.ウィンドウを表示ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.開始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.終了ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -175,10 +180,39 @@
             // 
             // notifyIcon1
             // 
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
             this.notifyIcon1.Text = "Time Stamp Observer";
             this.notifyIcon1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseClick);
             this.notifyIcon1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseDoubleClick);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ウィンドウを表示ToolStripMenuItem,
+            this.開始ToolStripMenuItem,
+            this.終了ToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(173, 92);
+            this.contextMenuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.contextMenuStrip1_ItemClicked);
+            // 
+            // ウィンドウを表示ToolStripMenuItem
+            // 
+            this.ウィンドウを表示ToolStripMenuItem.Name = "ウィンドウを表示ToolStripMenuItem";
+            this.ウィンドウを表示ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.ウィンドウを表示ToolStripMenuItem.Text = "ウィンドウを表示";
+            // 
+            // 開始ToolStripMenuItem
+            // 
+            this.開始ToolStripMenuItem.Name = "開始ToolStripMenuItem";
+            this.開始ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.開始ToolStripMenuItem.Text = "開始";
+            // 
+            // 終了ToolStripMenuItem
+            // 
+            this.終了ToolStripMenuItem.Name = "終了ToolStripMenuItem";
+            this.終了ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.終了ToolStripMenuItem.Text = "終了";
             // 
             // Form1
             // 
@@ -197,11 +231,13 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximumSize = new System.Drawing.Size(1000, 270);
             this.MinimumSize = new System.Drawing.Size(360, 270);
             this.Name = "Form1";
             this.Text = "Time Stamp Observer";
             this.Resize += new System.EventHandler(this.Form1_Resize);
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -222,6 +258,10 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem ウィンドウを表示ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 開始ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 終了ToolStripMenuItem;
     }
 }
 

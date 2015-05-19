@@ -493,5 +493,10 @@ namespace TimeStampObserver
             this.notifyIcon1.Visible = false;
             this.WindowState = FormWindowState.Normal;
         }
+
+        private void contextMenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            MessageBox.Show(e.ClickedItem.Text);
+        }
     }
 }
