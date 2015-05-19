@@ -6,3 +6,4 @@ C:\Users\Komatsu\documents\visual studio 2013\Projects\TimeStampObserver\TimeSta
 C:\Users\Komatsu\documents\visual studio 2013\Projects\TimeStampObserver\TimeStampObserver\obj\Release\TimeStampObserver.csproj.GenerateResource.Cache
 C:\Users\Komatsu\documents\visual studio 2013\Projects\TimeStampObserver\TimeStampObserver\obj\Release\TimeStampObserver.exe
 C:\Users\Komatsu\documents\visual studio 2013\Projects\TimeStampObserver\TimeStampObserver\obj\Release\TimeStampObserver.pdb
+C:\Users\Komatsu\documents\visual studio 2013\Projects\TimeStampObserver\TimeStampObserver\obj\Release\TimeStampObserver.csprojResolveAssemblyReference.cache

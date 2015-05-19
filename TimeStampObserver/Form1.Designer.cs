@@ -236,6 +236,7 @@
             this.MinimumSize = new System.Drawing.Size(360, 270);
             this.Name = "Form1";
             this.Text = "Time Stamp Observer";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
             this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);

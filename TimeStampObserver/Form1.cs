@@ -51,8 +51,17 @@ namespace TimeStampObserver
         /// 要素0には実行するプログラムを、要素1にはコマンドライン引数が入っている
         /// </summary>
         private string[] commands;
+
+        /// <summary>
+        /// 起動直後に監視を開始するかどうか
+        /// </summary>
+        private bool run;
         #endregion フィールド
 
+        #region コンストラクタ
+        /// <summary>
+        /// 通常のコンストラクタ。フィールドの初期化のみを行う。
+        /// </summary>
         public Form1()
         {
             InitializeComponent();
@@ -79,7 +88,69 @@ namespace TimeStampObserver
             fbd.Description = "ワーキングディレクトリを設定してください";
         }
 
+        /// <summary>
+        /// フィールドの初期化に加え、渡された環境変数を用いて初期化を行う。
+        /// </summary>
+        /// <param name="args">環境変数</param>
+        public Form1(Dictionary<string, string> args)
+            : this()
+        {
+            // ワーキングディレクトリの追加
+            if (args.ContainsKey("wd"))
+            {
+                textBox1.Text = args["wd"];
+                if (Directory.Exists(args["wd"]))
+                {
+                    Directory.SetCurrentDirectory(args["wd"]);
+                }
+            }
+
+            // 監視ファイルの追加
+            if (args.ContainsKey("file"))
+            {
+                // 絶対パス指定じゃなかった場合は、カレントディレクトリを設定
+                if (Path.IsPathRooted(args["file"]))
+                {
+                    textBox1.Text = Environment.CurrentDirectory;
+                }
+
+                // 相対パス指定にできるか検証、ファイルが存在するかどうかは検証しない
+                if (string.IsNullOrWhiteSpace(textBox1.Text))
+                {
+                    textBox2.Text = args["file"];
+                }
+                else
+                {
+                    textBox2.Text = args["file"].Replace(textBox1.Text, "");
+                }
+            }
+
+            // イベントハンドラで実行するコマンドを設定
+            if (args.ContainsKey("cmd"))
+            {
+                textBox3.Text = args["cmd"];
+            }
+
+            // Form_Loadで監視を開始するようにする
+            run = args.ContainsKey("run");
+        }
+        #endregion コンストラクタ
+
         #region イベントハンドラー
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // 起動
+            if (run)
+            {
+                // 開始判定
+                if (power() && watcher != null)
+                {
+                    this.WindowState = FormWindowState.Minimized;
+                    showBalloonTip("監視を開始しました", ToolTipIcon.Info);
+                }
+            }
+        }
+
         private void Form1_Resize(object sender, EventArgs e)
         {
             // 最小化したときにタスクバーに非表示に設定
@@ -224,7 +295,8 @@ namespace TimeStampObserver
                             {
                                 ReturnFromTray();
                                 power();
-                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("プロセスの起動に失敗しました。コマンドの構文が間違っています。\n監視を中断します。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                this.textBox3.Focus();
                             }
                             // コピー元のファイルがなければエラー
                             if (File.Exists(args[0]))
@@ -235,7 +307,8 @@ namespace TimeStampObserver
                             {
                                 ReturnFromTray();
                                 power();
-                                MessageBox.Show("Command Failed!!\n" + args[0] + " is not found. Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("プロセスの起動に失敗しました。" + args[0] + "が見つかりません。\n監視を中断します。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                this.textBox3.Focus();
                             }
                             break;
                         default:
@@ -250,14 +323,16 @@ namespace TimeStampObserver
                             {
                                 if (!p.Start())
                                 {
-                                    MessageBox.Show("Failed!!");
+                                    MessageBox.Show("プロセスの起動に失敗しました。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    this.textBox3.Focus();
                                 }
                             }
                             catch
                             {
                                 ReturnFromTray();
                                 power();
-                                MessageBox.Show("Command Failed!! Observation Aborted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("プロセスの起動に失敗しました。処理を確認してください。\n監視を中断します。", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                this.textBox3.Focus();
                             }
                             break;
                     }
@@ -467,7 +542,7 @@ namespace TimeStampObserver
             else
             {
                 // 引数用意
-                string wd = textBox1.Text;
+                string wd = string.IsNullOrWhiteSpace(textBox1.Text) ? Directory.GetCurrentDirectory() : textBox1.Text;
                 string filePath;
                 string file;
                 string cmdln = textBox3.Text;
@@ -505,23 +580,27 @@ namespace TimeStampObserver
                     }
                     else
                     {
-                        MessageBox.Show("ワーキングディレクトリ(" + wd + ")が正しくありません");
+                        MessageBox.Show("ワーキングディレクトリ(" + wd + ")が正しくありません", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.textBox1.Focus();
                         return false;
                     }
                 }
                 if (string.IsNullOrWhiteSpace(textBox2.Text) || !File.Exists(textBox2.Text))
                 {
-                    MessageBox.Show("ファイル名: " + (Path.IsPathRooted(textBox2.Text) || string.IsNullOrWhiteSpace(textBox2.Text) ? "" : filePath + "\\") + textBox2.Text + "\nファイルが見つかりません");
+                    MessageBox.Show((string.IsNullOrWhiteSpace(textBox2.Text) ? "" : "ファイル名: " + (Path.IsPathRooted(textBox2.Text) ? "" : filePath.TrimEnd('\\') + "\\" + textBox2.Text+ "\n")) +"ファイルが見つかりません", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.textBox2.Focus();
                     return false;
                 }
                 if (string.IsNullOrWhiteSpace(filePath) || !Directory.Exists(filePath))
                 {
-                    MessageBox.Show("ファイルの場所: " + filePath + "\nファイルの場所を確認してください");
+                    MessageBox.Show("ファイルの場所: " + filePath + "\nファイルの場所を確認してください", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.textBox2.Focus();
                     return false;
                 }
                 if (commands.Length == 0)
                 {
-                    MessageBox.Show("設定中の処理: " + cmdln + "処理を確認してください\n");
+                    MessageBox.Show((string.IsNullOrWhiteSpace(cmdln) ? "" : "設定中の処理: " + cmdln + "\n") + "処理を確認してください", "Time Stamp Observer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.textBox3.Focus();
                     return false;
                 }
 
