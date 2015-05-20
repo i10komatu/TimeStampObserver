@@ -378,6 +378,19 @@ namespace TimeStampObserver
             }
         }
 
+        private void textBox3_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                // 開始判定
+                if (power() && watcher != null)
+                {
+                    this.WindowState = FormWindowState.Minimized;
+                    showBalloonTip("監視を開始しました", ToolTipIcon.Info);
+                }
+            }
+        }
+
         private void textBox_DragEnter(object sender, DragEventArgs e)
         {
             // カーソルの下にドラッグ可能を示すエフェクトをつける

@@ -165,6 +165,7 @@
             this.textBox3.TabIndex = 5;
             this.textBox3.DragDrop += new System.Windows.Forms.DragEventHandler(this.textBox3_DragDrop);
             this.textBox3.DragEnter += new System.Windows.Forms.DragEventHandler(this.textBox_DragEnter);
+            this.textBox3.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox3_KeyDown);
             // 
             // label4
             // 
