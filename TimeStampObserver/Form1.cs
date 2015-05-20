@@ -758,7 +758,7 @@ namespace TimeStampObserver
                 this.textBox1.Enabled = false;
                 this.textBox2.Enabled = false;
                 this.textBox3.Enabled = false;
-                this.notifyIcon1.Text = "Time Stamp Observer\n監視中";
+                this.notifyIcon1.Text = string.Format("Time Stamp Observer\n監視中({0})", file);
                 this.contextMenuStrip1.Items[1].Text = "停止(&S)";
             }
             return true;
