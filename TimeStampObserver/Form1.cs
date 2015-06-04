@@ -114,10 +114,17 @@ namespace TimeStampObserver
                     textBox1.Text = Environment.CurrentDirectory;
                 }
 
-                // 相対パス指定にできるか検証、ファイルが存在するかどうかは検証しない
+                // ワーキングディレクトリが指定されていた場合は相対パス指定にできるか検証
+                // ファイルが存在するかどうかは検証しない
                 if (string.IsNullOrWhiteSpace(textBox1.Text))
                 {
-                    textBox2.Text = args["file"];
+                    // 指定されていなかった場合はファイルが存在しているパスをワーキングディレクトリに設定
+                    int tmp = args["file"].LastIndexOf('\\', args["file"].Length - 1);
+                    string file = args["file"].Substring(tmp + 1);
+                    string filePath = args["file"].Substring(0, tmp);
+
+                    textBox1.Text = filePath;
+                    textBox2.Text = file;
                 }
                 else
                 {
