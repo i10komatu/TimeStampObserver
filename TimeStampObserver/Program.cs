@@ -91,6 +91,13 @@ namespace TimeStampObserver
                 message = "オプションの書式が間違っています。";
                 return null;
             }
+            // ファイル指定なしかつオプション指定なしが一つでもあった場合
+            if (!result.ContainsKey("file") && s != "")
+            {
+                int tmp = s.IndexOf(' ');
+                result["file"] = s.Substring(0, tmp);
+                s = s.Substring(tmp).Trim();
+            }
             if (!result.ContainsKey("cmd") && s != "")
             {
                 result["cmd"] = s.Trim();
